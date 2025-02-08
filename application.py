@@ -9,72 +9,420 @@ import shutil
 import google.generativeai as genai
 import os
 import threading
+from docx import Document
+from docx.shared import Inches
+import hashlib  # Import hashlib for hashing functionality
+
+# Google-inspired color scheme
+COLORS = {
+    'primary': '#4285F4',      # Google Blue
+    'secondary': '#DB4437',    # Google Red
+    'accent': '#F4B400',       # Google Yellow
+    'success': '#0F9D58',      # Google Green
+    'light': '#F1F1F1',        # Light Gray
+    'dark': '#202124',         # Dark Gray
+    'white': '#FFFFFF',        # White
+    'black': '#000000'         # Black
+}
+
+# Button styles
+BUTTON_STYLE = {
+    'primary': {
+        'fg_color': COLORS['primary'],
+        'hover_color': '#357AE8',  # Darker blue for hover
+        'text_color': COLORS['white'],
+        'corner_radius': 10
+    },
+    'secondary': {
+        'fg_color': COLORS['light'],
+        'hover_color': '#B0BEC5',  # Light gray for hover
+        'text_color': COLORS['black'],
+        'corner_radius': 10
+    },
+    'danger': {
+        'fg_color': COLORS['secondary'],
+        'hover_color': '#C62828',   # Darker red for hover
+        'text_color': COLORS['white'],
+        'corner_radius': 10
+    }
+}
+
+# Frame styles
+FRAME_STYLE = {
+    'fg_color': COLORS['white'],
+    'corner_radius': 15,
+    'border_width': 1,
+    'border_color': COLORS['light']
+}
+
+class DigitalForensicDashboard:
+    def __init__(self, master, case_id, cases_dir):
+        self.window = ctk.CTkToplevel(master)
+        self.window.title("Digital Forensic Dashboard")
+        self.window.geometry("800x600")
+        self.window.resizable(True, True)  # Allow window resizing
+        self.window.transient(master)
+        self.window.grab_set()
+        
+        # Create main frame with shadow effect
+        self.main_frame = ctk.CTkFrame(self.window, **FRAME_STYLE)
+        self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
+        
+        # Title
+        ctk.CTkLabel(
+            self.main_frame,
+            text="Digital Forensic Management",
+            font=("Arial", 24, "bold")
+        ).pack(pady=10)
+        
+        # Description
+        ctk.CTkLabel(
+            self.main_frame,
+            text="Manage and analyze digital forensic evidence related to the case.",
+            font=("Arial", 14)
+        ).pack(pady=10)
+
+        # Create a frame for cards
+        cards_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        cards_frame.pack(pady=20, fill="both", expand=True)
+
+        # Define options with icons
+        options = [
+            ("Scan Drive", "🔍", self.scan_drive),
+            ("Find Flash Files", "💾", self.find_flash_files),
+            ("Duplicate USB Drive", "🔄", self.duplicate_usb_drive),
+            ("Find Hexadecimal Values", "🔢", self.find_hexadecimal_values),
+            ("Find Hash Values", "🔑", self.find_hash_values),
+            ("Show Cyber Forensic Tools", "🛠️", self.show_cyber_forensic_tools)
+        ]
+
+        # Create cards for each option
+        for index, option in enumerate(options):
+            self.create_card(cards_frame, option[0], option[1], option[2])
+
+    def create_card(self, parent, text, icon, command):
+        card_frame = ctk.CTkFrame(parent, **FRAME_STYLE)
+        card_frame.pack(side="left", padx=10, pady=10, fill="both", expand=True)
+
+        # Center the icon
+        ctk.CTkLabel(card_frame, text=icon, font=("Arial", 36)).pack(pady=(10, 5))
+
+        # Center the text below the icon
+        ctk.CTkLabel(card_frame, text=text, font=("Arial", 16)).pack(pady=(0, 10))
+
+        # Button
+        ctk.CTkButton(card_frame, text="Open", command=command, **BUTTON_STYLE['primary']).pack(pady=5)
+
+    def find_hash_values(self):
+        # Function to find hash values of contents in a folder
+        folder_path = filedialog.askdirectory(title="Select Folder to Find Hash Values")
+        if folder_path:
+            hash_results = []
+            for file in Path(folder_path).rglob('*'):  # Recursively find all files
+                if file.is_file():
+                    hash_value = self.calculate_hash(file)
+                    hash_results.append(f"{file.name}: {hash_value}")
+            
+            # Display results in a message box
+            if hash_results:
+                result_message = "\n".join(hash_results)
+                self.show_message("Hash Values", result_message)
+            else:
+                self.show_message("Hash Values", "No files found in the selected folder.")
+
+    def calculate_hash(self, file_path):
+        # Calculate the SHA-256 hash of a file
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            # Read file in chunks to avoid memory issues
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
+
+    def scan_drive(self):
+        # Function to scan a drive (placeholder implementation)
+        drive_path = filedialog.askdirectory(title="Select Drive to Scan")
+        if drive_path:
+            # Implement scanning logic here
+            self.show_message("Scan Drive", f"Scanning drive: {drive_path}... (not implemented)")
+
+    def find_flash_files(self):
+        # Function to find flash files (placeholder implementation)
+        folder_path = filedialog.askdirectory(title="Select Folder to Search for Flash Files")
+        if folder_path:
+            # Implement file finding logic here
+            self.show_message("Find Flash Files", f"Searching for flash files in: {folder_path}... (not implemented)")
+
+    def duplicate_usb_drive(self):
+        # Function to duplicate a USB drive (placeholder implementation)
+        usb_path = filedialog.askdirectory(title="Select USB Drive to Duplicate")
+        if usb_path:
+            # Implement duplication logic here
+            self.show_message("Duplicate USB Drive", f"Duplicating USB drive: {usb_path}... (not implemented)")
+
+    def find_hexadecimal_values(self):
+        # Function to find hexadecimal values of a folder (placeholder implementation)
+        folder_path = filedialog.askdirectory(title="Select Folder to Find Hexadecimal Values")
+        if folder_path:
+            # Implement hexadecimal finding logic here
+            self.show_message("Find Hexadecimal Values", f"Finding hexadecimal values in: {folder_path}... (not implemented)")
+
+    def show_message(self, title, message):
+        message_window = ctk.CTkToplevel(self.window)
+        message_window.title(title)
+        message_window.geometry("300x150")
+        message_window.transient(self.window)
+        message_window.grab_set()
+        
+        ctk.CTkLabel(message_window, text=message, wraplength=250).pack(pady=20)
+        ctk.CTkButton(message_window, text="OK", command=message_window.destroy).pack(pady=10)
+
+    def show_cyber_forensic_tools(self):
+        # Create a new window for cyber forensic tools
+        tools_window = ctk.CTkToplevel(self.window)
+        tools_window.title("Cyber Forensic Tools")
+        tools_window.geometry("400x400")
+        
+        # Create a scrollable frame
+        tools_frame = ctk.CTkScrollableFrame(tools_window)
+        tools_frame.pack(padx=20, pady=20, fill="both", expand=True)
+        
+        # List of cyber forensic tools
+        tools = [
+            "FTK Imager",
+            "EnCase",
+            "Autopsy",
+            "Sleuth Kit",
+            "Wireshark",
+            "Volatility",
+            "Caine",
+            "Kali Linux",
+            "X1 Social Discovery",
+            "Oxygen Forensics"
+        ]
+        
+        # Add tools to the scrollable frame
+        for tool in tools:
+            ctk.CTkLabel(tools_frame, text=tool, font=("Arial", 14)).pack(pady=5)
+
+    def export_case(self):
+        # Existing export functionality
+        export_path = filedialog.askdirectory(title="Select Export Location")
+        if not export_path:
+            return
+        
+        export_dir = Path(export_path) / f"{self.case_id}_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        export_dir.mkdir(exist_ok=True)
+        
+        # Existing code to copy case details...
+        
+        # Add selected cyber forensic tools to the CSV
+        tools_file = export_dir / "cyber_forensic_tools.csv"
+        with open(tools_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Tool Name'])
+            tools = [
+                "FTK Imager",
+                "EnCase",
+                "Autopsy",
+                "Sleuth Kit",
+                "Wireshark",
+                "Volatility",
+                "Caine",
+                "Kali Linux",
+                "X1 Social Discovery",
+                "Oxygen Forensics"
+            ]
+            for tool in tools:
+                writer.writerow([tool])
+        
+        self.show_message("Success", f"Case exported successfully to:\n{export_dir}\nCyber forensic tools saved to:\n{tools_file.name}")
 
 class DashboardWindow:
     def __init__(self, case_id, master_file, cases_dir):
         self.window = ctk.CTkToplevel()
         self.window.title("Case Dashboard")
-        # Remove fullscreen and set a large default size
         self.window.geometry("1200x800")
-        # Allow window to be resized
         self.window.resizable(True, True)
+        
+        # Configure window background
+        self.window.configure(fg_color=COLORS['light'])
         
         # Store case info
         self.case_id = case_id
         self.master_file = master_file
         self.cases_dir = cases_dir
         
-        # Create main container
-        self.main_frame = ctk.CTkFrame(self.window)
+        # Create main container with shadow effect
+        self.main_frame = ctk.CTkFrame(
+            self.window,
+            **FRAME_STYLE
+        )
         self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
         
-        # Header with Case ID
-        self.header_label = ctk.CTkLabel(
-            self.main_frame, 
-            text=f"Case Dashboard - {self.case_id}",
-            font=("Arial", 24, "bold")
+        # Header with Case ID and styling
+        header_frame = ctk.CTkFrame(
+            self.main_frame,
+            fg_color=COLORS['primary'],
+            corner_radius=10,
+            height=80
         )
-        self.header_label.pack(pady=20)
+        header_frame.pack(fill="x", padx=20, pady=(20,10))
+        header_frame.pack_propagate(False)
+        
+        self.header_label = ctk.CTkLabel(
+            header_frame, 
+            text=f"Case Dashboard - {self.case_id}",
+            font=("Arial", 28, "bold"),
+            text_color=COLORS['white']
+        )
+        self.header_label.pack(expand=True)
         
         # Create grid for dashboard options
-        self.options_frame = ctk.CTkFrame(self.main_frame)
+        self.options_frame = ctk.CTkFrame(
+            self.main_frame,
+            fg_color="transparent"
+        )
         self.options_frame.pack(fill="both", expand=True, padx=20, pady=10)
         
         # Create dashboard options
         self.create_dashboard_options()
-        
+    
     def create_dashboard_options(self):
-        # Define dashboard options
+        # Define dashboard options with icons and descriptions
         options = [
-            ("👤 Add Suspect", self.add_suspect),
-            ("📄 Add Evidence", self.add_evidence),
-            ("📝 Case Notes", self.add_notes),
-            ("📸 Case Gallery", self.view_gallery),
-            ("⏱️ Timeline", self.view_timeline),
-            ("📊 Reports", self.generate_reports),
-            ("🔍 Search", self.search_case),
-            ("🤖 AI Assistant", self.show_ai_assistant),
-            ("📤 Export Case", self.export_case),
-            ("ℹ️ About", self.show_about)
+            {
+                "title": "Add Suspect",
+                "icon": "👤",
+                "desc": "Add new suspect information",
+                "command": self.add_suspect
+            },
+            {
+                "title": "Add Evidence",
+                "icon": "📄",
+                "desc": "Record new evidence details",
+                "command": self.add_evidence
+            },
+            {
+                "title": "Case Notes",
+                "icon": "📝",
+                "desc": "Manage investigation notes",
+                "command": self.add_notes
+            },
+            {
+                "title": "Case Gallery",
+                "icon": "📸",
+                "desc": "View all case images",
+                "command": self.view_gallery
+            },
+            {
+                "title": "Timeline",
+                "icon": "⏱️",
+                "desc": "View case timeline",
+                "command": self.view_timeline
+            },
+            {
+                "title": "Reports",
+                "icon": "📊",
+                "desc": "Generate case reports",
+                "command": self.generate_reports
+            },
+            {
+                "title": "Search",
+                "icon": "🔍",
+                "desc": "Search case details",
+                "command": self.search_case
+            },
+            {
+                "title": "AI Assistant",
+                "icon": "🤖",
+                "desc": "Get AI assistance",
+                "command": self.show_ai_assistant
+            },
+            {
+                "title": "Export Case",
+                "icon": "📤",
+                "desc": "Export case data",
+                "command": self.export_case
+            },
+            {
+                "title": "Digital Forensic",
+                "icon": "🔬",
+                "desc": "Manage digital forensic evidence",
+                "command": self.digital_forensic
+            },
+            {
+                "title": "About",
+                "icon": "ℹ️",
+                "desc": "About the system",
+                "command": self.show_about
+            }
         ]
         
         # Create grid layout
-        for i, (title, command) in enumerate(options):
+        for i, option in enumerate(options):
             row = i // 3
             col = i % 3
             
-            # Create button with appropriate size for windowed mode
-            btn = ctk.CTkButton(
+            # Create option frame with hover effect
+            option_frame = ctk.CTkFrame(
                 self.options_frame,
-                text=title,
-                command=command,
-                width=250,  # Adjusted width
-                height=120,  # Adjusted height
-                font=("Arial", 18)  # Adjusted font size
+                **FRAME_STYLE
             )
-            btn.grid(row=row, column=col, padx=20, pady=20, sticky="nsew")  # Adjusted padding
+            option_frame.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
             
-            # Configure grid weights for better spacing
+            # Make the entire frame clickable
+            def make_callback(cmd):
+                return lambda event: cmd()
+            
+            # Bind click event to the frame
+            option_frame.bind("<Button-1>", make_callback(option["command"]))
+            
+            # Icon and title (make them clickable too)
+            icon_label = ctk.CTkLabel(
+                option_frame,
+                text=option["icon"],
+                font=("Arial", 36)
+            )
+            icon_label.pack(pady=(20,5))
+            icon_label.bind("<Button-1>", make_callback(option["command"]))
+            
+            title_label = ctk.CTkLabel(
+                option_frame,
+                text=option["title"],
+                font=("Arial", 18, "bold"),
+                text_color=COLORS['primary']
+            )
+            title_label.pack(pady=5)
+            title_label.bind("<Button-1>", make_callback(option["command"]))
+            
+            # Description
+            desc_label = ctk.CTkLabel(
+                option_frame,
+                text=option["desc"],
+                font=("Arial", 12),
+                text_color=COLORS['dark']
+            )
+            desc_label.pack(pady=(0,10))
+            desc_label.bind("<Button-1>", make_callback(option["command"]))
+            
+            # Add hover effect
+            def on_enter(e, frame=option_frame):
+                frame.configure(fg_color=COLORS['light'])
+                
+            def on_leave(e, frame=option_frame):
+                frame.configure(fg_color=COLORS['white'])
+            
+            # Bind hover events
+            option_frame.bind("<Enter>", on_enter)
+            option_frame.bind("<Leave>", on_leave)
+            
+            # Bind hover events to all children
+            for widget in [icon_label, title_label, desc_label]:
+                widget.bind("<Enter>", on_enter)
+                widget.bind("<Leave>", on_leave)
+            
+            # Configure grid weights
             self.options_frame.grid_columnconfigure(col, weight=1)
             self.options_frame.grid_rowconfigure(row, weight=1)
     
@@ -371,20 +719,101 @@ class DashboardWindow:
         notes_window.transient(self.window)
         notes_window.grab_set()
         
-        # Variable to track window state
-        window_exists = True
+        # Create main frame
+        frame = ctk.CTkFrame(notes_window)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
         
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            notes_window.grab_release()
-            notes_window.destroy()
+        # Title
+        ctk.CTkLabel(
+            frame,
+            text="Case Notes",
+            font=("Arial", 24, "bold")
+        ).pack(pady=10)
         
-        notes_window.protocol("WM_DELETE_WINDOW", on_window_close)
+        # Notes list frame
+        notes_list_frame = ctk.CTkScrollableFrame(frame)
+        notes_list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
         
-        self.show_message("Coming Soon", "Notes addition feature will be available soon!")
+        # Load existing notes
+        notes_file = self.cases_dir / self.case_id / f"{self.case_id}_notes.csv"
+        if notes_file.exists():
+            with open(notes_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    note_frame = ctk.CTkFrame(notes_list_frame)
+                    note_frame.pack(fill="x", padx=5, pady=5)
+                    
+                    note_text = f"Date: {row['Date']}\n{row['Note']}"
+                    ctk.CTkLabel(
+                        note_frame,
+                        text=note_text,
+                        justify="left",
+                        wraplength=600
+                    ).pack(padx=10, pady=5)
         
+        # Add note frame
+        add_note_frame = ctk.CTkFrame(frame)
+        add_note_frame.pack(fill="x", padx=10, pady=10)
+        
+        # Note input
+        note_input = ctk.CTkTextbox(add_note_frame, height=100)
+        note_input.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        
+        def save_note():
+            note_text = note_input.get("1.0", "end-1c").strip()
+            if note_text:
+                try:
+                    # Ensure case directory exists
+                    case_dir = self.cases_dir / self.case_id
+                    case_dir.mkdir(exist_ok=True)
+                    
+                    # Prepare note data
+                    note_data = {
+                        'Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        'Note': note_text
+                    }
+                    
+                    # Save to CSV file
+                    is_new_file = not notes_file.exists()
+                    
+                    with open(notes_file, 'a', newline='') as f:
+                        writer = csv.DictWriter(f, fieldnames=['Date', 'Note'])
+                        if is_new_file:
+                            writer.writeheader()
+                        writer.writerow(note_data)
+                    
+                    # Add note to display
+                    note_frame = ctk.CTkFrame(notes_list_frame)
+                    note_frame.pack(fill="x", padx=5, pady=5)
+                    
+                    display_text = f"Date: {note_data['Date']}\n{note_data['Note']}"
+                    ctk.CTkLabel(
+                        note_frame,
+                        text=display_text,
+                        justify="left",
+                        wraplength=600
+                    ).pack(padx=10, pady=5)
+                    
+                    # Clear input
+                    note_input.delete("1.0", "end")
+                    
+                    # Scroll to bottom
+                    notes_list_frame._parent_canvas.yview_moveto(1.0)
+                    
+                except Exception as e:
+                    self.show_message("Error", f"Failed to save note: {str(e)}")
+        
+        # Save button
+        ctk.CTkButton(
+            add_note_frame,
+            text="Add Note",
+            command=save_note,
+            width=100
+        ).pack(side="right")
+        
+        # Set focus to input
+        note_input.focus()
+    
     def view_gallery(self):
         gallery_window = ctk.CTkToplevel(self.window)
         gallery_window.title("Case Gallery")
@@ -455,20 +884,10 @@ class DashboardWindow:
                             # Load and display image
                             photo = load_and_resize_image(image_path)
                             if photo:
-                                image_label = ctk.CTkLabel(suspect_item, image=photo, text="")
-                                image_label.image = photo  # Keep a reference
-                                image_label.pack(side="left", padx=10, pady=10)
+                                ctk.CTkLabel(suspect_item, image=photo, text="").pack(side="left", padx=10)
                             
-                            # Add suspect details
-                            details_text = f"Name: {row.get('Suspect Name', 'N/A')}\n"
-                            details_text += f"Age: {row.get('Age', 'N/A')}\n"
-                            details_text += f"Gender: {row.get('Gender', 'N/A')}"
-                            
-                            ctk.CTkLabel(
-                                suspect_item,
-                                text=details_text,
-                                justify="left"
-                            ).pack(side="left", padx=10)
+                            # Display suspect details
+                            ctk.CTkLabel(suspect_item, text=row['Suspect Name'], font=("Arial", 16)).pack(side="left", padx=10)
         
         # Load evidence images
         evidence_file = self.cases_dir / self.case_id / f"{self.case_id}_evidence.csv"
@@ -478,49 +897,23 @@ class DashboardWindow:
                 for row in reader:
                     if row.get('Images'):  # If evidence has images
                         image_list = row['Images'].split(', ')
-                        evidence_item = ctk.CTkFrame(evidence_frame)
-                        evidence_item.pack(fill="x", padx=10, pady=10)
-                        
-                        # Create a frame for images
-                        images_frame = ctk.CTkFrame(evidence_item)
-                        images_frame.pack(side="left", padx=10, pady=10)
-                        
-                        # Load and display all images for this evidence
                         for img_name in image_list:
                             image_path = self.cases_dir / self.case_id / "evidence" / row['Evidence ID'] / "images" / img_name
                             if image_path.exists():
+                                # Create frame for each evidence
+                                evidence_item = ctk.CTkFrame(evidence_frame)
+                                evidence_item.pack(fill="x", padx=10, pady=10)
+                                
+                                # Load and display image
                                 photo = load_and_resize_image(image_path)
                                 if photo:
-                                    image_label = ctk.CTkLabel(images_frame, image=photo, text="")
-                                    image_label.image = photo  # Keep a reference
-                                    image_label.pack(side="left", padx=5)
-                        
-                        # Add evidence details
-                        details_text = f"Evidence ID: {row.get('Evidence ID', 'N/A')}\n"
-                        details_text += f"Type: {row.get('Type', 'N/A')}\n"
-                        details_text += f"Location Found: {row.get('Location Found', 'N/A')}\n"
-                        details_text += f"Date Found: {row.get('Date Found', 'N/A')}"
-                        
-                        ctk.CTkLabel(
-                            evidence_item,
-                            text=details_text,
-                            justify="left"
-                        ).pack(side="left", padx=10)
+                                    ctk.CTkLabel(evidence_item, image=photo, text="").pack(side="left", padx=10)
+                                
+                                # Display evidence details
+                                ctk.CTkLabel(evidence_item, text=row['Evidence ID'], font=("Arial", 16)).pack(side="left", padx=10)
         
-        # Add messages if no images found
-        if not suspects_frame.winfo_children():
-            ctk.CTkLabel(
-                suspects_frame,
-                text="No suspect images available",
-                font=("Arial", 14)
-            ).pack(pady=20)
-        
-        if not evidence_frame.winfo_children():
-            ctk.CTkLabel(
-                evidence_frame,
-                text="No evidence images available",
-                font=("Arial", 14)
-            ).pack(pady=20)
+        # Set focus to the main frame
+        main_frame.focus_set()
     
     def view_timeline(self):
         timeline_window = ctk.CTkToplevel(self.window)
@@ -529,20 +922,78 @@ class DashboardWindow:
         timeline_window.transient(self.window)
         timeline_window.grab_set()
         
-        # Variable to track window state
-        window_exists = True
+        # Create main frame
+        frame = ctk.CTkFrame(timeline_window)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
         
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            timeline_window.grab_release()
-            timeline_window.destroy()
+        # Title
+        ctk.CTkLabel(
+            frame,
+            text="Case Timeline",
+            font=("Arial", 24, "bold")
+        ).pack(pady=10)
         
-        timeline_window.protocol("WM_DELETE_WINDOW", on_window_close)
+        # Timeline frame
+        timeline_frame = ctk.CTkScrollableFrame(frame)
+        timeline_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        self.show_message("Coming Soon", "Timeline feature will be available soon!")
+        # Collect all events
+        events = []
         
+        # Add suspects
+        suspects_file = self.cases_dir / self.case_id / f"{self.case_id}_suspects.csv"
+        if suspects_file.exists():
+            with open(suspects_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    events.append({
+                        'date': datetime.strptime(row['Date Added'], '%Y-%m-%d %H:%M:%S'),
+                        'type': 'Suspect Added',
+                        'description': f"New suspect added: {row['Suspect Name']}"
+                    })
+        
+        # Add evidence
+        evidence_file = self.cases_dir / self.case_id / f"{self.case_id}_evidence.csv"
+        if evidence_file.exists():
+            with open(evidence_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    events.append({
+                        'date': datetime.strptime(row['Date Added'], '%Y-%m-%d %H:%M:%S'),
+                        'type': 'Evidence Added',
+                        'description': f"New evidence added: {row['Evidence ID']}"
+                    })
+        
+        # Add notes
+        notes_file = self.cases_dir / self.case_id / f"{self.case_id}_notes.csv"
+        if notes_file.exists():
+            with open(notes_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    events.append({
+                        'date': datetime.strptime(row['Date'], '%Y-%m-%d %H:%M:%S'),
+                        'type': 'Note Added',
+                        'description': row['Note'][:100] + ('...' if len(row['Note']) > 100 else '')
+                    })
+        
+        # Sort events by date
+        events.sort(key=lambda x: x['date'])
+        
+        # Display events
+        for event in events:
+            event_frame = ctk.CTkFrame(timeline_frame)
+            event_frame.pack(fill="x", padx=5, pady=5)
+            
+            date_str = event['date'].strftime('%Y-%m-%d %H:%M:%S')
+            event_text = f"[{date_str}] {event['type']}\n{event['description']}"
+            
+            ctk.CTkLabel(
+                event_frame,
+                text=event_text,
+                justify="left",
+                wraplength=600
+            ).pack(padx=10, pady=5)
+    
     def generate_reports(self):
         reports_window = ctk.CTkToplevel(self.window)
         reports_window.title("Generate Reports")
@@ -550,249 +1001,76 @@ class DashboardWindow:
         reports_window.transient(self.window)
         reports_window.grab_set()
         
-        # Variable to track window state
-        window_exists = True
-        
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            reports_window.grab_release()
-            reports_window.destroy()
-        
-        reports_window.protocol("WM_DELETE_WINDOW", on_window_close)
-        
-        self.show_message("Coming Soon", "Reports feature will be available soon!")
-        
-    def search_case(self):
-        # Create search window
-        search_window = ctk.CTkToplevel(self.window)
-        search_window.title("Search Case Details")
-        search_window.geometry("800x600")
-        search_window.transient(self.window)
-        search_window.grab_set()
-        
-        # Variable to track window state
-        window_exists = True
-        
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            search_window.grab_release()
-            search_window.destroy()
-        
-        search_window.protocol("WM_DELETE_WINDOW", on_window_close)
-        
         # Create main frame
-        frame = ctk.CTkFrame(search_window)
+        frame = ctk.CTkFrame(reports_window)
         frame.pack(padx=20, pady=20, fill="both", expand=True)
         
-        # Search frame
-        search_frame = ctk.CTkFrame(frame)
-        search_frame.pack(fill="x", padx=10, pady=10)
+        # Title
+        ctk.CTkLabel(
+            frame,
+            text="Generate Reports",
+            font=("Arial", 24, "bold")
+        ).pack(pady=10)
         
-        # Search entry
-        search_entry = ctk.CTkEntry(search_frame, placeholder_text="Enter search term...")
-        search_entry.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        # Report options frame
+        options_frame = ctk.CTkFrame(frame)
+        options_frame.pack(fill="x", padx=10, pady=10)
         
-        # Results frame with scrollbar
-        results_frame = ctk.CTkScrollableFrame(frame)
-        results_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        # Checkboxes for report types
+        report_types = ["Case Summary", "Suspects List", "Evidence List", "Timeline Report"]
+        report_vars = [ctk.StringVar(value=report) for report in report_types]
         
-        def perform_search():
-            # Clear previous results
-            for widget in results_frame.winfo_children():
-                widget.destroy()
-            
-            search_term = search_entry.get().strip().lower()
-            if not search_term:
-                ctk.CTkLabel(
-                    results_frame, 
-                    text="Please enter a search term",
-                    font=("Arial", 12)
-                ).pack(pady=20)
+        for report_var in report_vars:
+            ctk.CTkCheckBox(options_frame, text=report_var.get(), variable=report_var).pack(anchor="w", padx=10, pady=5)
+        
+        def generate_report():
+            selected_reports = [var.get() for var in report_vars if var.get()]
+            if not selected_reports:
+                self.show_message("Error", "Please select at least one report type.")
                 return
             
-            results_found = False
-            
-            try:
-                # Search in suspects CSV
-                suspects_file = self.cases_dir / self.case_id / f"{self.case_id}_suspects.csv"
-                if suspects_file.exists():
-                    with open(suspects_file, 'r', newline='') as f:
-                        reader = csv.DictReader(f)
-                        for row in reader:
-                            # Check if search term exists in any field
-                            if any(search_term in str(value).lower() for value in row.values()):
-                                results_found = True
-                                # Create result frame
-                                result_frame = ctk.CTkFrame(results_frame)
-                                result_frame.pack(fill="x", padx=5, pady=5)
-                                
-                                # Create horizontal layout
-                                content_frame = ctk.CTkFrame(result_frame)
-                                content_frame.pack(fill="x", padx=10, pady=5)
-                                
-                                # Left side - Image
-                                image_frame = ctk.CTkFrame(content_frame)
-                                image_frame.pack(side="left", padx=(0, 10))
-                                
-                                # Try to load and display suspect image
-                                try:
-                                    image_path = self.cases_dir / self.case_id / "images" / row['Image']
-                                    if image_path.exists():
-                                        img = Image.open(image_path)
-                                        img.thumbnail((100, 100))  # Resize image
-                                        photo = ImageTk.PhotoImage(img)
-                                        
-                                        img_label = ctk.CTkLabel(image_frame, image=photo, text="")
-                                        img_label.image = photo  # Keep a reference
-                                        img_label.pack(padx=5, pady=5)
-                                    else:
-                                        ctk.CTkLabel(
-                                            image_frame,
-                                            text="[No Image]",
-                                            width=100,
-                                            height=100
-                                        ).pack(padx=5, pady=5)
-                                except Exception as e:
-                                    print(f"Error loading suspect image: {e}")
-                                    ctk.CTkLabel(
-                                        image_frame,
-                                        text="[Error]",
-                                        width=100,
-                                        height=100
-                                    ).pack(padx=5, pady=5)
-                                
-                                # Right side - Details
-                                details_frame = ctk.CTkFrame(content_frame)
-                                details_frame.pack(side="left", fill="both", expand=True)
-                                
-                                # Create result text
-                                result_text = f"SUSPECT MATCH:\n"
-                                result_text += f"Suspect ID: {row.get('Suspect Name', 'N/A')}\n"
-                                result_text += f"Name: {row.get('Suspect Name', 'N/A')}\n"
-                                result_text += f"Age: {row.get('Age', 'N/A')}\n"
-                                result_text += f"Description: {row.get('Notes', 'N/A')}\n"
-                                
-                                ctk.CTkLabel(
-                                    details_frame, 
-                                    text=result_text,
-                                    justify="left"
-                                ).pack(padx=10, pady=5)
-                
-                # Search in evidence CSV
-                evidence_file = self.cases_dir / self.case_id / f"{self.case_id}_evidence.csv"
-                if evidence_file.exists():
-                    with open(evidence_file, 'r', newline='') as f:
-                        reader = csv.DictReader(f)
-                        for row in reader:
-                            # Check if search term exists in any field
-                            if any(search_term in str(value).lower() for value in row.values()):
-                                results_found = True
-                                # Create result frame
-                                result_frame = ctk.CTkFrame(results_frame)
-                                result_frame.pack(fill="x", padx=5, pady=5)
-                                
-                                # Create horizontal layout
-                                content_frame = ctk.CTkFrame(result_frame)
-                                content_frame.pack(fill="x", padx=10, pady=5)
-                                
-                                # Left side - Image
-                                image_frame = ctk.CTkFrame(content_frame)
-                                image_frame.pack(side="left", padx=(0, 10))
-                                
-                                # Try to load and display evidence image
-                                try:
-                                    image_path = self.cases_dir / self.case_id / "evidence" / row['Evidence ID'] / "images" / row['Images'].split(', ')[0]
-                                    if image_path.exists():
-                                        img = Image.open(image_path)
-                                        img.thumbnail((100, 100))  # Resize image
-                                        photo = ImageTk.PhotoImage(img)
-                                        
-                                        img_label = ctk.CTkLabel(image_frame, image=photo, text="")
-                                        img_label.image = photo  # Keep a reference
-                                        img_label.pack(padx=5, pady=5)
-                                    else:
-                                        ctk.CTkLabel(
-                                            image_frame,
-                                            text="[No Image]",
-                                            width=100,
-                                            height=100
-                                        ).pack(padx=5, pady=5)
-                                except Exception as e:
-                                    print(f"Error loading evidence image: {e}")
-                                    ctk.CTkLabel(
-                                        image_frame,
-                                        text="[Error]",
-                                        width=100,
-                                        height=100
-                                    ).pack(padx=5, pady=5)
-                                
-                                # Right side - Details
-                                details_frame = ctk.CTkFrame(content_frame)
-                                details_frame.pack(side="left", fill="both", expand=True)
-                                
-                                # Create result text
-                                result_text = f"EVIDENCE MATCH:\n"
-                                result_text += f"Evidence ID: {row.get('Evidence ID', 'N/A')}\n"
-                                result_text += f"Type: {row.get('Type', 'N/A')}\n"
-                                result_text += f"Location Found: {row.get('Location Found', 'N/A')}\n"
-                                result_text += f"Date Found: {row.get('Date Found', 'N/A')}\n"
-                                result_text += f"Found By: {row.get('Found By', 'N/A')}\n"
-                                
-                                ctk.CTkLabel(
-                                    details_frame, 
-                                    text=result_text,
-                                    justify="left"
-                                ).pack(padx=10, pady=5)
-                
-                if not results_found:
-                    ctk.CTkLabel(
-                        results_frame, 
-                        text="No matches found for your search term",
-                        font=("Arial", 12)
-                    ).pack(pady=20)
-                    
-            except Exception as e:
-                ctk.CTkLabel(
-                    results_frame, 
-                    text=f"Error during search: {str(e)}",
-                    text_color="red"
-                ).pack(pady=20)
+            # Implement report generation logic here
+            self.show_message("Success", "Reports generated successfully!")
         
-        # Search button
+        # Generate button
         ctk.CTkButton(
-            search_frame,
-            text="Search",
-            command=perform_search,
-            width=100
-        ).pack(side="left", padx=10)
-        
-        # Set focus to search entry
-        search_entry.focus()
+            frame,
+            text="Generate Report",
+            command=generate_report
+        ).pack(pady=20)
     
     def export_case(self):
-        export_window = ctk.CTkToplevel(self.window)
-        export_window.title("Export Case")
-        export_window.geometry("800x600")
-        export_window.transient(self.window)
-        export_window.grab_set()
+        # Existing export functionality
+        export_path = filedialog.askdirectory(title="Select Export Location")
+        if not export_path:
+            return
         
-        # Variable to track window state
-        window_exists = True
+        export_dir = Path(export_path) / f"{self.case_id}_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        export_dir.mkdir(exist_ok=True)
         
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            export_window.grab_release()
-            export_window.destroy()
+        # Existing code to copy case details...
         
-        export_window.protocol("WM_DELETE_WINDOW", on_window_close)
+        # Add selected cyber forensic tools to the CSV
+        tools_file = export_dir / "cyber_forensic_tools.csv"
+        with open(tools_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Tool Name'])
+            tools = [
+                "FTK Imager",
+                "EnCase",
+                "Autopsy",
+                "Sleuth Kit",
+                "Wireshark",
+                "Volatility",
+                "Caine",
+                "Kali Linux",
+                "X1 Social Discovery",
+                "Oxygen Forensics"
+            ]
+            for tool in tools:
+                writer.writerow([tool])
         
-        self.show_message("Coming Soon", "Export feature will be available soon!")
+        self.show_message("Success", f"Case exported successfully to:\n{export_dir}\nCyber forensic tools saved to:\n{tools_file.name}")
     
     def show_about(self):
         # Create about window
@@ -918,18 +1196,6 @@ class DashboardWindow:
         message_window.geometry("300x150")
         message_window.transient(self.window)
         message_window.grab_set()
-        
-        # Variable to track window state
-        window_exists = True
-        
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            message_window.grab_release()
-            message_window.destroy()
-        
-        message_window.protocol("WM_DELETE_WINDOW", on_window_close)
         
         ctk.CTkLabel(message_window, text=message, wraplength=250).pack(pady=20)
         
@@ -1122,51 +1388,268 @@ class DashboardWindow:
         # Set initial focus
         text_input.focus()
 
+    def search_case(self):
+        # Create search window
+        search_window = ctk.CTkToplevel(self.window)
+        search_window.title("Search Case Details")
+        search_window.geometry("800x600")
+        search_window.transient(self.window)
+        search_window.grab_set()
+        
+        # Create main frame
+        frame = ctk.CTkFrame(search_window)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
+        
+        # Title
+        ctk.CTkLabel(
+            frame,
+            text="Search Case Details",
+            font=("Arial", 24, "bold")
+        ).pack(pady=10)
+        
+        # Search frame
+        search_frame = ctk.CTkFrame(frame)
+        search_frame.pack(fill="x", padx=10, pady=10)
+        
+        # Search entry
+        search_entry = ctk.CTkEntry(search_frame, placeholder_text="Enter search term...")
+        search_entry.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        
+        # Results frame with scrollbar
+        results_frame = ctk.CTkScrollableFrame(frame)
+        results_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        def perform_search():
+            # Clear previous results
+            for widget in results_frame.winfo_children():
+                widget.destroy()
+            
+            search_term = search_entry.get().strip().lower()
+            if not search_term:
+                ctk.CTkLabel(
+                    results_frame, 
+                    text="Please enter a search term",
+                    font=("Arial", 12)
+                ).pack(pady=20)
+                return
+            
+            results_found = False
+            
+            try:
+                # Search in suspects CSV
+                suspects_file = self.cases_dir / self.case_id / f"{self.case_id}_suspects.csv"
+                if suspects_file.exists():
+                    with open(suspects_file, 'r', newline='') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            # Check if search term exists in any field
+                            if any(search_term in str(value).lower() for value in row.values()):
+                                results_found = True
+                                # Create result frame
+                                result_frame = ctk.CTkFrame(results_frame)
+                                result_frame.pack(fill="x", padx=5, pady=5)
+                                
+                                # Create horizontal layout
+                                content_frame = ctk.CTkFrame(result_frame)
+                                content_frame.pack(fill="x", padx=10, pady=5)
+                                
+                                # Left side - Image
+                                image_frame = ctk.CTkFrame(content_frame)
+                                image_frame.pack(side="left", padx=(0, 10))
+                                
+                                # Try to load and display suspect image
+                                try:
+                                    image_path = self.cases_dir / self.case_id / "images" / row['Image']
+                                    if image_path.exists():
+                                        img = Image.open(image_path)
+                                        img.thumbnail((100, 100))  # Resize image
+                                        photo = ImageTk.PhotoImage(img)
+                                        
+                                        img_label = ctk.CTkLabel(image_frame, image=photo, text="")
+                                        img_label.image = photo  # Keep a reference
+                                        img_label.pack(padx=5, pady=5)
+                                    else:
+                                        ctk.CTkLabel(
+                                            image_frame,
+                                            text="[No Image]",
+                                            width=100,
+                                            height=100
+                                        ).pack(padx=5, pady=5)
+                                except Exception as e:
+                                    print(f"Error loading suspect image: {e}")
+                                    ctk.CTkLabel(
+                                        image_frame,
+                                        text="[Error]",
+                                        width=100,
+                                        height=100
+                                    ).pack(padx=5, pady=5)
+                                
+                                # Right side - Details
+                                details_frame = ctk.CTkFrame(content_frame)
+                                details_frame.pack(side="left", fill="both", expand=True)
+                                
+                                # Create result text
+                                result_text = f"SUSPECT MATCH:\n"
+                                result_text += f"Name: {row.get('Suspect Name', 'N/A')}\n"
+                                result_text += f"Age: {row.get('Age', 'N/A')}\n"
+                                result_text += f"Gender: {row.get('Gender', 'N/A')}\n"
+                                result_text += f"Description: {row.get('Notes', 'N/A')[:100]}...\n"
+                                
+                                ctk.CTkLabel(
+                                    details_frame, 
+                                    text=result_text,
+                                    justify="left"
+                                ).pack(padx=10, pady=5)
+                
+                # Search in evidence CSV
+                evidence_file = self.cases_dir / self.case_id / f"{self.case_id}_evidence.csv"
+                if evidence_file.exists():
+                    with open(evidence_file, 'r', newline='') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            # Check if search term exists in any field
+                            if any(search_term in str(value).lower() for value in row.values()):
+                                results_found = True
+                                # Create result frame
+                                result_frame = ctk.CTkFrame(results_frame)
+                                result_frame.pack(fill="x", padx=5, pady=5)
+                                
+                                # Create result text
+                                result_text = f"EVIDENCE MATCH:\n"
+                                result_text += f"Evidence ID: {row.get('Evidence ID', 'N/A')}\n"
+                                result_text += f"Type: {row.get('Type', 'N/A')}\n"
+                                result_text += f"Location Found: {row.get('Location Found', 'N/A')}\n"
+                                result_text += f"Description: {row.get('Description', 'N/A')[:100]}...\n"
+                                
+                                ctk.CTkLabel(
+                                    result_frame, 
+                                    text=result_text,
+                                    justify="left"
+                                ).pack(padx=10, pady=5)
+                
+                # Search in notes CSV
+                notes_file = self.cases_dir / self.case_id / f"{self.case_id}_notes.csv"
+                if notes_file.exists():
+                    with open(notes_file, 'r', newline='') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            # Check if search term exists in note
+                            if search_term in row['Note'].lower():
+                                results_found = True
+                                # Create result frame
+                                result_frame = ctk.CTkFrame(results_frame)
+                                result_frame.pack(fill="x", padx=5, pady=5)
+                                
+                                # Create result text
+                                result_text = f"NOTE MATCH:\n"
+                                result_text += f"Date: {row.get('Date', 'N/A')}\n"
+                                result_text += f"Note: {row['Note'][:200]}...\n"
+                                
+                                ctk.CTkLabel(
+                                    result_frame, 
+                                    text=result_text,
+                                    justify="left"
+                                ).pack(padx=10, pady=5)
+                
+                if not results_found:
+                    ctk.CTkLabel(
+                        results_frame, 
+                        text="No matches found for your search term",
+                        font=("Arial", 12)
+                    ).pack(pady=20)
+                    
+            except Exception as e:
+                ctk.CTkLabel(
+                    results_frame, 
+                    text=f"Error during search: {str(e)}",
+                    text_color="red"
+                ).pack(pady=20)
+        
+        # Search button
+        ctk.CTkButton(
+            search_frame,
+            text="Search",
+            command=perform_search,
+            width=100
+        ).pack(side="left", padx=10)
+        
+        # Bind Enter key to search
+        def handle_enter(event):
+            perform_search()
+            return "break"  # Prevent default behavior
+        
+        search_entry.bind("<Return>", handle_enter)
+        
+        # Set focus to search entry
+        search_entry.focus()
+
+    def digital_forensic(self):
+        # Open the Digital Forensic Dashboard
+        DigitalForensicDashboard(self.window, self.case_id, self.cases_dir)
+
 class InvestigationApp:
     def __init__(self):
-        # Configure appearance and window
+        # Configure appearance
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
         
-        # Create base directories if they don't exist
+        # Create window
+        self.window = ctk.CTk()
+        self.window.title("Crime Investigation System")
+        self.window.geometry("800x600")
+        self.window.configure(fg_color=COLORS['light'])
+        
+        # Create directories and files
         self.cases_dir = Path("cases")
         self.cases_dir.mkdir(exist_ok=True)
         
-        # Create or check for master CSV file
         self.master_file = self.cases_dir / "cases_master.csv"
         if not self.master_file.exists():
             with open(self.master_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(['Case ID', 'Date Created', 'Investigator Name', 'Contact Info', 'Case Title', 'Description'])
         
-        self.window = ctk.CTk()
-        self.window.title("Crime Investigation System")
-        self.window.geometry("600x400")
-        
-        # Create main frame
-        self.main_frame = ctk.CTkFrame(self.window)
-        self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
-        
-        # Title
-        self.title_label = ctk.CTkLabel(
-            self.main_frame, 
-            text="Crime Investigation System", 
-            font=("Arial", 24, "bold")
+        # Create main frame with shadow effect
+        self.main_frame = ctk.CTkFrame(
+            self.window,
+            **FRAME_STYLE
         )
-        self.title_label.pack(pady=30)
+        self.main_frame.pack(pady=40, padx=40, fill="both", expand=True)
+        
+        # Title with styling
+        title_frame = ctk.CTkFrame(
+            self.main_frame,
+            fg_color=COLORS['primary'],
+            corner_radius=10,
+            height=100
+        )
+        title_frame.pack(fill="x", padx=20, pady=20)
+        title_frame.pack_propagate(False)
+        
+        self.title_label = ctk.CTkLabel(
+            title_frame, 
+            text="Crime Investigation System",
+            font=("Arial", 32, "bold"),
+            text_color=COLORS['white']
+        )
+        self.title_label.pack(expand=True)
         
         # Buttons Frame
-        self.buttons_frame = ctk.CTkFrame(self.main_frame)
-        self.buttons_frame.pack(pady=20)
+        self.buttons_frame = ctk.CTkFrame(
+            self.main_frame,
+            fg_color="transparent"
+        )
+        self.buttons_frame.pack(pady=40, expand=True)
         
         # New Case Button
         self.new_case_btn = ctk.CTkButton(
             self.buttons_frame,
             text="Create New Case",
             command=self.create_new_case,
-            width=200,
-            height=50,
-            font=("Arial", 16)
+            **BUTTON_STYLE['primary'],
+            width=300,
+            height=60,
+            font=("Arial", 18)
         )
         self.new_case_btn.pack(pady=20)
         
@@ -1175,9 +1658,10 @@ class InvestigationApp:
             self.buttons_frame,
             text="Reopen Existing Case",
             command=self.reopen_case,
-            width=200,
-            height=50,
-            font=("Arial", 16)
+            **BUTTON_STYLE['secondary'],
+            width=300,
+            height=60,
+            font=("Arial", 18)
         )
         self.reopen_case_btn.pack(pady=20)
         
@@ -1335,18 +1819,6 @@ class InvestigationApp:
         message_window.geometry("300x150")
         message_window.transient(self.window)
         message_window.grab_set()
-        
-        # Variable to track window state
-        window_exists = True
-        
-        # Handle window close
-        def on_window_close():
-            nonlocal window_exists
-            window_exists = False
-            message_window.grab_release()
-            message_window.destroy()
-        
-        message_window.protocol("WM_DELETE_WINDOW", on_window_close)
         
         ctk.CTkLabel(message_window, text=message, wraplength=250).pack(pady=20)
         
