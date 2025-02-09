@@ -13,6 +13,8 @@ from docx import Document
 from docx.shared import Inches
 import hashlib  # Import hashlib for hashing functionality
 
+
+
 # Google-inspired color scheme
 COLORS = {
     'primary': '#4285F4',      # Google Blue
