@@ -1118,6 +1118,7 @@ class DashboardWindow:
                 for row in reader:
                     doc.add_paragraph(f"Date: {row['Date']}, Note: {row['Note']}")
 
+
     def add_timeline_to_doc(self, doc):
         # Load timeline events and add to the document
         events = []
@@ -1848,7 +1849,6 @@ class InvestigationApp:
         # Contact Information
         self.contact_entry = self.create_entry_field("Contact Information:")
         
-        # Case Title
         self.case_title_entry = self.create_entry_field("Case Title:")
         
         # Description
