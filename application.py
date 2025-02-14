@@ -1083,6 +1083,12 @@ class DashboardWindow:
                 reader = csv.DictReader(f)
                 for row in reader:
                     doc.add_paragraph(f"Name: {row['Suspect Name']}, Age: {row['Age']}, Gender: {row['Gender']}, Notes: {row['Notes']}")
+                    
+                    # Add suspect image if available
+                    image_path = self.cases_dir / self.case_id / "images" / row['Image']
+                    if image_path.exists():
+                        doc.add_picture(str(image_path), width=Inches(2))  # Convert Path to string
+                        doc.add_paragraph()  # Add a blank line after the image
 
     def add_evidence_to_doc(self, doc):
         # Load evidence from CSV and add to the document
@@ -1093,6 +1099,14 @@ class DashboardWindow:
                 reader = csv.DictReader(f)
                 for row in reader:
                     doc.add_paragraph(f"Evidence ID: {row['Evidence ID']}, Type: {row['Type']}, Description: {row['Description']}")
+                    
+                    # Add evidence images if available
+                    image_list = row['Images'].split(', ')
+                    for img_name in image_list:
+                        image_path = self.cases_dir / self.case_id / "evidence" / row['Evidence ID'] / "images" / img_name
+                        if image_path.exists():
+                            doc.add_picture(str(image_path), width=Inches(2))  # Convert Path to string
+                            doc.add_paragraph()  # Add a blank line after the image
 
     def add_notes_to_doc(self, doc):
         # Load notes from CSV and add to the document
