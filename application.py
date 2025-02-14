@@ -1047,32 +1047,110 @@ class DashboardWindow:
         if not export_path:
             return
         
-        export_dir = Path(export_path) / f"{self.case_id}_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        export_dir.mkdir(exist_ok=True)
+        # Create DOCX file
+        docx_file_path = Path(export_path) / f"{self.case_id}_export.docx"
+        doc = Document()
+        doc.add_heading(f'Case Report: {self.case_id}', level=1)
+
+        # Add case details
+        doc.add_heading('Case Details', level=2)
+        doc.add_paragraph(f'Case ID: {self.case_id}')
+        doc.add_paragraph(f'Date Created: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         
-        # Existing code to copy case details...
+        # Add suspects
+        self.add_suspects_to_doc(doc)
+
+        # Add evidence
+        self.add_evidence_to_doc(doc)
+
+        # Add notes
+        self.add_notes_to_doc(doc)
+
+        # Add timeline
+        self.add_timeline_to_doc(doc)
+
+        # Save the document
+        doc.save(docx_file_path)
+
+        self.show_message("Success", f"Case exported successfully to:\n{docx_file_path.name}")
+
+    def add_suspects_to_doc(self, doc):
+        # Load suspects from CSV and add to the document
+        suspects_file = self.cases_dir / self.case_id / f"{self.case_id}_suspects.csv"
+        if suspects_file.exists():
+            doc.add_heading('Suspects', level=2)
+            with open(suspects_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    doc.add_paragraph(f"Name: {row['Suspect Name']}, Age: {row['Age']}, Gender: {row['Gender']}, Notes: {row['Notes']}")
+
+    def add_evidence_to_doc(self, doc):
+        # Load evidence from CSV and add to the document
+        evidence_file = self.cases_dir / self.case_id / f"{self.case_id}_evidence.csv"
+        if evidence_file.exists():
+            doc.add_heading('Evidence', level=2)
+            with open(evidence_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    doc.add_paragraph(f"Evidence ID: {row['Evidence ID']}, Type: {row['Type']}, Description: {row['Description']}")
+
+    def add_notes_to_doc(self, doc):
+        # Load notes from CSV and add to the document
+        notes_file = self.cases_dir / self.case_id / f"{self.case_id}_notes.csv"
+        if notes_file.exists():
+            doc.add_heading('Notes', level=2)
+            with open(notes_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    doc.add_paragraph(f"Date: {row['Date']}, Note: {row['Note']}")
+
+    def add_timeline_to_doc(self, doc):
+        # Load timeline events and add to the document
+        events = []
+        # Add suspects
+        suspects_file = self.cases_dir / self.case_id / f"{self.case_id}_suspects.csv"
+        if suspects_file.exists():
+            with open(suspects_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    events.append({
+                        'date': datetime.strptime(row['Date Added'], '%Y-%m-%d %H:%M:%S'),
+                        'type': 'Suspect Added',
+                        'description': f"New suspect added: {row['Suspect Name']}"
+                    })
         
-        # Add selected cyber forensic tools to the CSV
-        tools_file = export_dir / "cyber_forensic_tools.csv"
-        with open(tools_file, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['Tool Name'])
-            tools = [
-                "FTK Imager",
-                "EnCase",
-                "Autopsy",
-                "Sleuth Kit",
-                "Wireshark",
-                "Volatility",
-                "Caine",
-                "Kali Linux",
-                "X1 Social Discovery",
-                "Oxygen Forensics"
-            ]
-            for tool in tools:
-                writer.writerow([tool])
+        # Add evidence
+        evidence_file = self.cases_dir / self.case_id / f"{self.case_id}_evidence.csv"
+        if evidence_file.exists():
+            with open(evidence_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    events.append({
+                        'date': datetime.strptime(row['Date Added'], '%Y-%m-%d %H:%M:%S'),
+                        'type': 'Evidence Added',
+                        'description': f"New evidence added: {row['Evidence ID']}"
+                    })
         
-        self.show_message("Success", f"Case exported successfully to:\n{export_dir}\nCyber forensic tools saved to:\n{tools_file.name}")
+        # Add notes
+        notes_file = self.cases_dir / self.case_id / f"{self.case_id}_notes.csv"
+        if notes_file.exists():
+            with open(notes_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    events.append({
+                        'date': datetime.strptime(row['Date'], '%Y-%m-%d %H:%M:%S'),
+                        'type': 'Note Added',
+                        'description': row['Note'][:100] + ('...' if len(row['Note']) > 100 else '')
+                    })
+        
+        # Sort events by date
+        events.sort(key=lambda x: x['date'])
+        
+        # Add events to the document
+        doc.add_heading('Timeline', level=2)
+        for event in events:
+            date_str = event['date'].strftime('%Y-%m-%d %H:%M:%S')
+            doc.add_paragraph(f"[{date_str}] {event['type']}: {event['description']}")
     
     def show_about(self):
         # Create about window
